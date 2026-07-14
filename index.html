@@ -95,6 +95,9 @@
     background:rgba(255,255,255,.94); color:var(--ink); font-size:.92rem; font-family:inherit;
   }
   .meta-field input:focus, .meta-field select:focus{outline:2px solid #ffd166;}
+  .meta-field input[readonly]{
+    background:#eef0f2; color:var(--muted); cursor:default;
+  }
 
   /* stamp badge - live score */
   .stamp-badge{
@@ -232,13 +235,18 @@
   .signature-panel h2{margin:0 0 14px; font-size:1.05rem; color:var(--steel-dark);}
   .sig-grid{display:grid; grid-template-columns:1.1fr .9fr; gap:20px;}
   @media (max-width:640px){.sig-grid{grid-template-columns:1fr;}}
+  .sig-pad-wrap{position:relative;}
   .sig-pad-wrap canvas{
     width:100%; height:160px; border:1.5px dashed var(--line); border-radius:6px; touch-action:none; background:#fbfcfd; display:block;
   }
+  .sig-print-img{display:none;}
   .sig-controls{margin-top:8px; display:flex; gap:10px;}
   .sig-info .field{margin-bottom:12px;}
   .sig-info input[type=text], .sig-info input[type=date]{
     width:100%; border:1px solid var(--line); border-radius:5px; padding:8px 9px; font-family:inherit; font-size:.86rem;
+  }
+  .sig-info input[readonly]{
+    background:#eef0f2; color:var(--muted); cursor:default;
   }
   .sig-line{margin-top:6px; border-top:1px solid var(--ink); padding-top:4px; font-size:.75rem; color:var(--muted); text-align:center;}
 
@@ -340,8 +348,8 @@
     select.field-select, textarea.field-textarea, input.field-input{display:none !important;}
     .print-only-value{display:block !important; white-space:pre-wrap; font-size:.76rem; padding:2px 2px; min-height:.9em; border-bottom:1px solid #eee; line-height:1.3;}
     .item-card .solicitud-field{display:grid !important;}
-    .photo-row{gap:8px; margin-top:4px;}
-    .photo-slot{width:90px; height:90px;}
+    .photo-row{gap:6px; margin-top:3px;}
+    .photo-slot{width:100px; height:100px;}
     .photo-slot .remove-btn{display:none !important;}
     .photo-slot.empty{display:none !important;}
 
@@ -358,9 +366,12 @@
     .crit-chip{padding:5px 8px;}
     .crit-chip .chip-name{font-size:.68rem;} .crit-chip .chip-n{font-size:.85rem;} .crit-chip .chip-pct{font-size:.6rem;}
 
-    .sig-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:flex-start;}
-    .sig-pad-wrap {flex:1;}
-    .sig-pad-wrap canvas{width:100%; height:100px; aspect-ratio:2/1;}
+    .sig-grid{gap:10px;}
+    .sig-pad-wrap canvas{display:none !important;}
+    .sig-print-img{
+      display:block !important; width:100%; height:90px; object-fit:contain;
+      border:1.5px dashed var(--line); border-radius:6px; background:#fbfcfd;
+    }
     .sig-info .field{margin-bottom:6px;}
     .sig-info input{padding:4px 6px; font-size:.76rem;}
 
@@ -399,7 +410,7 @@
       </div>
       <div class="meta-field">
         <label for="fecha">Fecha</label>
-        <input type="date" id="fecha">
+        <input type="text" id="fecha" readonly>
       </div>
     </div>
   </header>
@@ -453,6 +464,7 @@
     <div class="sig-grid">
       <div class="sig-pad-wrap">
         <canvas id="sigCanvas"></canvas>
+        <img id="sigPrintImg" class="sig-print-img" alt="Firma del auditor(a)">
         <div class="sig-controls no-print">
           <button class="btn ghost" id="clearSig" type="button">Limpiar firma</button>
         </div>
@@ -462,6 +474,10 @@
         <div class="field">
           <label for="auditorNombreBottom">Nombre de quien audita</label>
           <input type="text" id="auditorNombreBottom" placeholder="Se sincroniza con el campo superior">
+        </div>
+        <div class="field">
+          <label for="colaboradorNum">N.º de Colaborador</label>
+          <input type="text" id="colaboradorNum" placeholder="Ej: 12345">
         </div>
         <div class="field">
           <label for="fechaFirma">Fecha de la auditoría</label>
@@ -505,7 +521,7 @@ const CRIT_OPTIONS = [
 
 const BRANCHES = [
   "Albrook","Alta Plaza","Bella Vista","Brisas del Golf","Chitré","Coronado",
-  "Costa del Este","La Pita","La Siesta","Market Plaza","Multiplaza",
+  "Costa del Este","La Siesta","Market Plaza","Multiplaza",
   "Panamá Pacífico","Transístmica","Versalles","Villa Zaita"
 ];
 
@@ -612,7 +628,7 @@ function photoSlotHtml(n, slot){
   `;
 }
 
-/* Photo handling */
+/* ---------------- Photo handling ---------------- */
 function wirePhotoInputs(n, slot){
   ['photoCam_','photoGal_'].forEach(prefix => {
     const input = document.getElementById(`${prefix}${n}_${slot}`);
@@ -662,7 +678,7 @@ function clearPhoto(n, slot){
   saveState();
 }
 
-/* Summary / scoring */
+/* ---------------- Summary / scoring ---------------- */
 function updateSummary(){
   let ok=0, bad=0;
   let critCounts = {alta:0, media:0, baja:0};
@@ -748,7 +764,6 @@ function applyRequiredState(n, estadoValue){
   }
 }
 
-/* Signature pad */
 let sigCanvas, sigCtx, drawing=false, sigHasContent=false;
 function initSignaturePad(){
   sigCanvas = document.getElementById('sigCanvas');
@@ -788,12 +803,12 @@ function initSignaturePad(){
   });
 }
 
-/* Save / restore */
+/* ---------------- Save / restore ---------------- */
 function collectAndSaveScalarFields(){
   STATE.sucursal = document.getElementById('sucursal').value;
   STATE.area = document.getElementById('area').value;
   STATE.auditorNombre = document.getElementById('auditorNombreTop').value;
-  STATE.fecha = document.getElementById('fecha').value;
+  STATE.colaboradorNum = document.getElementById('colaboradorNum').value;
   STATE.obsFinal = document.getElementById('obsFinal').value;
   AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
     const checked = document.querySelector(`input[name="estado_${item.n}"]:checked`);
@@ -807,7 +822,7 @@ function collectAndSaveScalarFields(){
 
 function saveState(){
   collectAndSaveScalarFields();
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){ }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){ /* storage full or unavailable */ }
 }
 
 function restoreState(){
@@ -822,8 +837,9 @@ function restoreState(){
     document.getElementById('auditorNombreTop').value = STATE.auditorNombre;
     document.getElementById('auditorNombreBottom').value = STATE.auditorNombre;
   }
-  if(STATE.fecha) document.getElementById('fecha').value = STATE.fecha;
+  if(STATE.colaboradorNum) document.getElementById('colaboradorNum').value = STATE.colaboradorNum;
   if(STATE.obsFinal) document.getElementById('obsFinal').value = STATE.obsFinal;
+  /* La fecha siempre es automática (día actual) y no se restaura desde datos guardados */
 
   AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
     const n = item.n;
@@ -851,7 +867,7 @@ function restoreState(){
   }
 }
 
-/* Print-friendly values */
+/* ---------------- Print-friendly values ---------------- */
 function preparePrintValues(){
   AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
     const n = item.n;
@@ -862,9 +878,16 @@ function preparePrintValues(){
     document.getElementById(`recPrint_${n}`).textContent = document.getElementById(`rec_${n}`).value || '—';
   }));
   document.getElementById('obsFinalPrint').textContent = document.getElementById('obsFinal').value || '—';
+
+  const sigImg = document.getElementById('sigPrintImg');
+  if(sigHasContent && sigCanvas){
+    sigImg.src = sigCanvas.toDataURL('image/png');
+  } else {
+    sigImg.removeAttribute('src');
+  }
 }
 
-/* Validation */
+/* ---------------- Validation ---------------- */
 function validateRequiredFields(){
   let firstInvalid = null;
   let missing = [];
@@ -896,7 +919,7 @@ function validateRequiredFields(){
   return true;
 }
 
-/* Wiring */
+/* ---------------- Wiring ---------------- */
 function wireEvents(){
   document.getElementById('formContainer').addEventListener('change', (e) => {
     if(e.target.matches('input[type=radio], select, textarea')){
@@ -920,10 +943,7 @@ function wireEvents(){
   document.getElementById('sucursal').addEventListener('change', saveState);
   document.getElementById('area').addEventListener('input', saveState);
   document.getElementById('obsFinal').addEventListener('input', saveState);
-  document.getElementById('fecha').addEventListener('change', () => {
-    document.getElementById('fechaFirma').value = formatDate(document.getElementById('fecha').value);
-    saveState();
-  });
+  document.getElementById('colaboradorNum').addEventListener('input', saveState);
 
   document.getElementById('resetBtn').addEventListener('click', () => {
     if(confirm('¿Reiniciar el formulario? Se perderán todos los datos, fotos y la firma.')){
@@ -941,21 +961,17 @@ function wireEvents(){
   window.addEventListener('beforeprint', preparePrintValues);
 }
 
-function formatDate(iso){
-  if(!iso) return '';
-  const [y,m,d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
-
 function setToday(){
   const today = new Date();
-  const iso = today.toISOString().slice(0,10);
-  const fechaInput = document.getElementById('fecha');
-  if(!fechaInput.value) fechaInput.value = iso;
-  document.getElementById('fechaFirma').value = formatDate(fechaInput.value);
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  const formatted = `${dd}/${mm}/${yyyy}`;
+  document.getElementById('fecha').value = formatted;
+  document.getElementById('fechaFirma').value = formatted;
 }
 
-/* Init */
+/* ---------------- Init ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
   populateSucursales();
   buildForm();
