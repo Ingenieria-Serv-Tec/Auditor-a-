@@ -340,8 +340,8 @@
     select.field-select, textarea.field-textarea, input.field-input{display:none !important;}
     .print-only-value{display:block !important; white-space:pre-wrap; font-size:.76rem; padding:2px 2px; min-height:.9em; border-bottom:1px solid #eee; line-height:1.3;}
     .item-card .solicitud-field{display:grid !important;}
-    .photo-row{gap:6px; margin-top:3px;}
-    .photo-slot{width:64px; height:64px;}
+    .photo-row{gap:8px; margin-top:4px;}
+    .photo-slot{width:90px; height:90px;}
     .photo-slot .remove-btn{display:none !important;}
     .photo-slot.empty{display:none !important;}
 
@@ -358,8 +358,9 @@
     .crit-chip{padding:5px 8px;}
     .crit-chip .chip-name{font-size:.68rem;} .crit-chip .chip-n{font-size:.85rem;} .crit-chip .chip-pct{font-size:.6rem;}
 
-    .sig-grid{gap:10px;}
-    .sig-pad-wrap canvas{height:80px;}
+    .sig-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:flex-start;}
+    .sig-pad-wrap {flex:1;}
+    .sig-pad-wrap canvas{width:100%; height:100px; aspect-ratio:2/1;}
     .sig-info .field{margin-bottom:6px;}
     .sig-info input{padding:4px 6px; font-size:.76rem;}
 
@@ -754,7 +755,6 @@ function initSignaturePad(){
   function resize(){
     const ratio = window.devicePixelRatio || 1;
     const rect = sigCanvas.getBoundingClientRect();
-    const prevData = sigCanvas.toDataURL ? sigCanvas.toDataURL() : null;
     sigCanvas.width = rect.width * ratio;
     sigCanvas.height = rect.height * ratio;
     sigCtx = sigCanvas.getContext('2d');
