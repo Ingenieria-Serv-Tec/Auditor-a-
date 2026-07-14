@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoría Técnica · Bandejas y Techos Falsos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a2332;
+    --steel:#2a5d8a;
+    --steel-dark:#173a56;
+    --steel-pale:#e4ecf3;
+    --paper:#eef1f5;
+    --line:#d3dbe4;
+    --card:#ffffff;
+    --ok:#1f8a4c;
+    --ok-bg:#e5f6ec;
+    --warn:#b8860b;
+    --warn-bg:#fdf3d9;
+    --bad:#c0392b;
+    --bad-bg:#fbe6e3;
+    --muted:#6b7686;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:26px 26px;
+    background-attachment:fixed;
+  }
+  h1,h2,h3,.brand,.stamp-badge .num{font-family:'Space Grotesk', system-ui, sans-serif;}
+  .item-num{font-family:'IBM Plex Mono', monospace;}
+
+  .app-shell{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 0 60px;
+  }
+
+  /* ---------- Top bar ---------- */
+  header.topbar{
+    background:linear-gradient(135deg, var(--steel-dark), var(--steel));
+    color:#fff;
+    padding:22px 24px 26px;
+    position:relative;
+    overflow:hidden;
+    border-bottom:4px solid var(--steel-dark);
+  }
+  header.topbar::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size:18px 18px;
+    pointer-events:none;
+  }
+  .brand{
+    position:relative;
+    display:flex; align-items:baseline; gap:10px;
+    font-size:1.5rem; font-weight:700; letter-spacing:.2px;
+  }
+  .brand small{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.62rem; font-weight:500; letter-spacing:2px;
+    color:#c9dcee; text-transform:uppercase;
+    border:1px solid rgba(255,255,255,.35);
+    padding:3px 7px; border-radius:2px;
+  }
+  .brand-sub{position:relative; font-size:.85rem; color:#cfe0ef; margin-top:4px;}
+
+  .meta-grid{
+    position:relative;
+    display:grid;
+    grid-template-columns:1.1fr .9fr .9fr .7fr;
+    gap:14px;
+    margin-top:18px;
+  }
+  @media (max-width:900px){
+    .meta-grid{grid-template-columns:1fr 1fr;}
+  }
+  .meta-field label{
+    display:block; font-size:.7rem; letter-spacing:.6px; text-transform:uppercase;
+    color:#bcd3e8; margin-bottom:5px; font-weight:600;
+  }
+  .meta-field input, .meta-field select{
+    width:100%; padding:9px 10px; border-radius:4px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.94); color:var(--ink); font-size:.92rem; font-family:inherit;
+  }
+  .meta-field input:focus, .meta-field select:focus{outline:2px solid #ffd166;}
+
+  /* stamp badge - live score */
+  .stamp-badge{
+    position:sticky; top:12px; z-index:30;
+    float:right;
+    margin:-64px 0 0 12px;
+    width:96px; height:96px;
+    border-radius:50%;
+    border:3px dashed rgba(255,255,255,.85);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.08);
+    backdrop-filter:blur(2px);
+    transform:rotate(-6deg);
+    transition:background .25s, border-color .25s;
+  }
+  .stamp-badge .num{font-size:1.5rem; font-weight:700; line-height:1; color:#fff;}
+  .stamp-badge .lbl{font-size:.55rem; letter-spacing:1.5px; text-transform:uppercase; color:#e8f0f8; margin-top:2px;}
+  .stamp-badge.ok{border-color:var(--ok); background:rgba(31,138,76,.35);}
+  .stamp-badge.warn{border-color:var(--warn); background:rgba(184,134,11,.35);}
+  .stamp-badge.bad{border-color:var(--bad); background:rgba(192,57,43,.35);}
+
+  @media (max-width:640px){
+    .meta-grid{grid-template-columns:1fr;}
+    .stamp-badge{position:static; float:none; margin:14px auto 0; transform:rotate(0);}
+  }
+
+  /* ---------- Category / items ---------- */
+  .category-section{margin:26px 16px 0;}
+  .category-head{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:10px;
+  }
+  .category-head .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.68rem; color:#fff; background:var(--steel);
+    padding:3px 8px; border-radius:2px; letter-spacing:1px;
+  }
+  .category-head h2{
+    font-size:1.05rem; margin:0; color:var(--steel-dark);
+    position:relative; padding-left:0;
+  }
+  .category-head::after{
+    content:""; flex:1; height:1px; background:var(--line);
+  }
+
+  .item-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--steel);
+    border-radius:6px;
+    padding:16px 18px;
+    margin-bottom:14px;
+    position:relative;
+  }
+  .item-card.answered-ok{border-left-color:var(--ok);}
+  .item-card.answered-bad{border-left-color:var(--bad);}
+
+  .item-head{display:flex; gap:10px; align-items:flex-start; margin-bottom:12px;}
+  .item-num{
+    flex:none; width:28px; height:28px; border-radius:50%;
+    background:var(--steel-pale); color:var(--steel-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-size:.8rem; font-weight:600;
+  }
+  .item-text{font-size:.92rem; line-height:1.4; padding-top:3px;}
+
+  .estado-row{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;}
+  .opt{position:relative;}
+  .opt input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .opt label{
+    display:inline-block; padding:7px 16px; border-radius:20px; font-size:.82rem; font-weight:600;
+    border:1.5px solid var(--line); color:var(--muted); cursor:pointer; user-select:none;
+    transition:all .15s;
+  }
+  .opt input:checked + label.lbl-ok{background:var(--ok-bg); border-color:var(--ok); color:var(--ok);}
+  .opt input:checked + label.lbl-bad{background:var(--bad-bg); border-color:var(--bad); color:var(--bad);}
+  .opt input:focus-visible + label{outline:2px solid var(--steel); outline-offset:1px;}
+
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;}
+  @media (max-width:560px){.field-row{grid-template-columns:1fr;}}
+  .field label{display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:4px; font-weight:600;}
+  .field select, .field textarea, .field input.field-input{
+    width:100%; border:1px solid var(--line); border-radius:5px; padding:8px 9px;
+    font-family:inherit; font-size:.86rem; color:var(--ink); background:#fbfcfd;
+  }
+  .field textarea{resize:vertical; min-height:52px;}
+  .field select:focus, .field textarea:focus, .field input.field-input:focus{outline:none; border-color:var(--steel); box-shadow:0 0 0 3px var(--steel-pale);}
+  .print-only-value{display:none;}
+
+  .opt-mark{font-weight:500; text-transform:none; letter-spacing:0; color:var(--muted); font-size:.7rem;}
+  .item-card .solicitud-field{display:none;}
+  .item-card.answered-bad .solicitud-field{display:grid;}
+
+  .photo-row{display:flex; gap:12px; margin-top:6px; flex-wrap:wrap;}
+  .photo-slot{
+    width:110px; height:110px; border:1.5px dashed var(--line); border-radius:6px;
+    display:flex; align-items:center; justify-content:center; position:relative;
+    overflow:hidden; background:#fafbfc; flex:none;
+  }
+  .photo-slot img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-slot .add-label{
+    font-size:.72rem; color:var(--muted); text-align:center; cursor:pointer; padding:8px; line-height:1.3;
+  }
+  .photo-slot input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .photo-slot .remove-btn{
+    position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%;
+    background:rgba(0,0,0,.6); color:#fff; border:none; font-size:.75rem; cursor:pointer; line-height:1;
+  }
+
+  /* ---------- Summary ---------- */
+  .summary-panel{
+    margin:30px 16px 0; background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:20px 22px;
+  }
+  .summary-panel h2{margin:0 0 14px; font-size:1.05rem; color:var(--steel-dark);}
+  .summary-grid{display:flex; gap:24px; flex-wrap:wrap; align-items:center;}
+  .summary-stat{min-width:100px;}
+  .summary-stat .n{font-family:'Space Grotesk'; font-size:1.6rem; font-weight:700;}
+  .summary-stat .l{font-size:.72rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted);}
+  .summary-score{
+    flex:1; min-width:220px; padding:14px 18px; border-radius:8px; text-align:center;
+    font-weight:700; font-size:1.3rem; transition:all .2s;
+  }
+  .summary-score .pct-label{display:block; font-size:.7rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-top:3px;}
+  .summary-score.ok{background:var(--ok-bg); color:var(--ok);}
+  .summary-score.warn{background:var(--warn-bg); color:var(--warn);}
+  .summary-score.bad{background:var(--bad-bg); color:var(--bad);}
+  .summary-score.none{background:#f1f2f4; color:var(--muted);}
+
+  /* ---------- Signature ---------- */
+  .signature-panel{
+    margin:22px 16px 0; background:var(--card); border:1px solid var(--line); border-radius:8px;
+    padding:20px 22px;
+  }
+  .signature-panel h2{margin:0 0 14px; font-size:1.05rem; color:var(--steel-dark);}
+  .sig-grid{display:grid; grid-template-columns:1.1fr .9fr; gap:20px;}
+  @media (max-width:640px){.sig-grid{grid-template-columns:1fr;}}
+  .sig-pad-wrap canvas{
+    width:100%; height:160px; border:1.5px dashed var(--line); border-radius:6px; touch-action:none; background:#fbfcfd; display:block;
+  }
+  .sig-controls{margin-top:8px; display:flex; gap:10px;}
+  .sig-info .field{margin-bottom:12px;}
+  .sig-info input[type=text], .sig-info input[type=date]{
+    width:100%; border:1px solid var(--line); border-radius:5px; padding:8px 9px; font-family:inherit; font-size:.86rem;
+  }
+  .sig-line{margin-top:6px; border-top:1px solid var(--ink); padding-top:4px; font-size:.75rem; color:var(--muted); text-align:center;}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    font-family:inherit; font-size:.85rem; font-weight:600; padding:9px 18px; border-radius:6px;
+    border:1.5px solid var(--steel); background:var(--steel); color:#fff; cursor:pointer; transition:all .15s;
+  }
+  .btn:hover{background:var(--steel-dark); border-color:var(--steel-dark);}
+  .btn.secondary{background:transparent; color:var(--steel); }
+  .btn.secondary:hover{background:var(--steel-pale);}
+  .btn.ghost{background:transparent; color:var(--muted); border-color:var(--line);}
+  .action-bar{
+    margin:26px 16px 0; display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end;
+  }
+
+  .legend{
+    margin:18px 16px 0; background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px 16px;
+    font-size:.82rem; color:var(--ink); line-height:1.5;
+  }
+  .legend .legend-title{font-size:.72rem; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:600; margin-bottom:8px;}
+  .legend-row{display:flex; align-items:flex-start; gap:8px; padding:6px 8px; border-radius:5px; margin-bottom:6px;}
+  .legend-row:last-child{margin-bottom:0;}
+  .legend-row .dot{flex:none; width:11px; height:11px; border-radius:50%; margin-top:3px;}
+  .legend-row.alta{background:var(--bad-bg);} .legend-row.alta .dot{background:var(--bad);}
+  .legend-row.media{background:var(--warn-bg);} .legend-row.media .dot{background:var(--warn);}
+  .legend-row.baja{background:var(--ok-bg);} .legend-row.baja .dot{background:var(--ok);}
+  .legend-row b{color:var(--ink);}
+
+  /* criticidad select tinting */
+  select.field-select.crit-alta{border-color:var(--bad); background:var(--bad-bg); color:var(--bad); font-weight:600;}
+  select.field-select.crit-media{border-color:var(--warn); background:var(--warn-bg); color:var(--warn); font-weight:600;}
+  select.field-select.crit-baja{border-color:var(--ok); background:var(--ok-bg); color:var(--ok); font-weight:600;}
+
+  .field-textarea.field-required, .field-select.field-required, .field-input.field-required{border-color:var(--bad); box-shadow:0 0 0 2px var(--bad-bg);}
+  .required-mark{color:var(--bad); font-weight:700;}
+
+  /* criticidad summary breakdown */
+  .crit-summary{display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; padding-top:16px; border-top:1px solid var(--line);}
+  .crit-chip{flex:1; min-width:150px; border-radius:7px; padding:10px 14px;}
+  .crit-chip .chip-top{display:flex; justify-content:space-between; align-items:baseline;}
+  .crit-chip .chip-name{font-weight:700; font-size:.8rem;}
+  .crit-chip .chip-n{font-family:'Space Grotesk'; font-size:1.15rem; font-weight:700;}
+  .crit-chip .chip-pct{font-size:.72rem; color:var(--muted); margin-top:2px;}
+  .crit-chip.alta{background:var(--bad-bg); color:var(--bad);}
+  .crit-chip.media{background:var(--warn-bg); color:var(--warn);}
+  .crit-chip.baja{background:var(--ok-bg); color:var(--ok);}
+
+  /* photo capture buttons */
+  .photo-slot .capture-btns{display:flex; flex-direction:column; gap:4px; width:100%; height:100%;}
+  .photo-slot .capture-btns label{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:.66rem; color:var(--muted); cursor:pointer; position:relative;
+  }
+  .photo-slot .capture-btns label:first-child{border-bottom:1px dashed var(--line);}
+  .photo-slot .capture-btns .icon{font-size:1.1rem; margin-bottom:2px;}
+  .photo-slot input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;}
+
+  /* ---------- Print ---------- */
+  @media print{
+    @page{ margin:10mm 9mm; }
+    body{
+      background:#fff; background-image:none;
+      font-family:'Arial Narrow', Arial, sans-serif !important;
+      font-size:11pt;
+    }
+    h1,h2,h3,.brand,.stamp-badge .num,.item-num{font-family:'Arial Narrow', Arial, sans-serif !important;}
+    .no-print{display:none !important;}
+
+    header.topbar{
+      background:var(--steel-dark) !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      padding:10px 14px 12px;
+    }
+    .brand{font-size:1.05rem;}
+    .brand-sub{font-size:.7rem; margin-top:2px;}
+    .meta-grid{margin-top:8px; gap:8px;}
+    .meta-field label{font-size:.6rem; margin-bottom:2px;}
+    .meta-field input, .meta-field select{padding:4px 6px; font-size:.78rem;}
+    .stamp-badge{position:static !important; float:none; margin:4px auto 0; transform:none; width:68px; height:68px;}
+    .stamp-badge .num{font-size:1.1rem;} .stamp-badge .lbl{font-size:.45rem;}
+
+    .item-card{break-inside:avoid; border-color:#ccc; margin-bottom:5px; padding:6px 10px; border-radius:3px;}
+    .item-head{margin-bottom:5px; gap:6px;}
+    .item-num{width:20px; height:20px; font-size:.68rem;}
+    .item-text{font-size:.78rem; padding-top:1px;}
+    .category-section{break-inside:auto; margin:8px 6px 0;}
+    .category-head{margin-bottom:4px;}
+    .category-head h2{font-size:.85rem;}
+    .legend{margin:6px 6px 0; padding:6px 10px;}
+    .legend .legend-title{font-size:.62rem; margin-bottom:4px;}
+    .legend-row{padding:3px 6px; margin-bottom:3px; font-size:.72rem;}
+    .legend-row .dot{width:8px; height:8px; margin-top:2px;}
+
+    .estado-row{margin-bottom:4px; gap:5px;}
+    .opt label{padding:3px 10px; font-size:.72rem;}
+    .field-row{gap:8px; margin-bottom:4px;}
+    .field label{font-size:.6rem; margin-bottom:2px;}
+
+    select.field-select, textarea.field-textarea, input.field-input{display:none !important;}
+    .print-only-value{display:block !important; white-space:pre-wrap; font-size:.76rem; padding:2px 2px; min-height:.9em; border-bottom:1px solid #eee; line-height:1.3;}
+    .item-card .solicitud-field{display:grid !important;}
+    .photo-row{gap:6px; margin-top:3px;}
+    .photo-slot{width:64px; height:64px;}
+    .photo-slot .remove-btn{display:none !important;}
+    .photo-slot.empty{display:none !important;}
+
+    .summary-panel, .signature-panel{
+      margin:8px 6px 0; padding:10px 12px; break-inside:auto;
+    }
+    .summary-panel h2, .signature-panel h2{font-size:.85rem; margin-bottom:6px;}
+    .summary-grid{gap:10px;}
+    .summary-stat .n{font-size:1.1rem;}
+    .summary-stat .l{font-size:.6rem;}
+    .summary-score{padding:6px 10px; font-size:.9rem;}
+    .summary-score .pct-label{font-size:.6rem;}
+    .crit-summary{margin-top:8px; padding-top:8px; gap:6px;}
+    .crit-chip{padding:5px 8px;}
+    .crit-chip .chip-name{font-size:.68rem;} .crit-chip .chip-n{font-size:.85rem;} .crit-chip .chip-pct{font-size:.6rem;}
+
+    .sig-grid{gap:10px;}
+    .sig-pad-wrap canvas{height:80px;}
+    .sig-info .field{margin-bottom:6px;}
+    .sig-info input{padding:4px 6px; font-size:.76rem;}
+
+    .summary-score, .summary-panel, .crit-chip{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .opt:has(input:not(:checked)){display:none !important;}
+    a[href]{color:inherit; text-decoration:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <header class="topbar">
+    <div class="stamp-badge none" id="stampBadge">
+      <span class="num" id="stampPct">--%</span>
+      <span class="lbl">Cumplim.</span>
+    </div>
+    <div class="brand">Auditoría Técnica <small>Instalaciones</small></div>
+    <div class="brand-sub">Bandejas portacables, tuberías y techos falsos (cielo raso)</div>
+
+    <div class="meta-grid">
+      <div class="meta-field">
+        <label for="sucursal">Sucursal / Sede</label>
+        <select id="sucursal">
+          <option value="">Seleccione una sucursal...</option>
+        </select>
+      </div>
+      <div class="meta-field">
+        <label for="area">Área de la sucursal</label>
+        <input type="text" id="area" placeholder="Ej: Cocina, Ventas...">
+      </div>
+      <div class="meta-field">
+        <label for="auditorNombreTop">Auditor(a)</label>
+        <input type="text" id="auditorNombreTop" placeholder="Nombre completo">
+      </div>
+      <div class="meta-field">
+        <label for="fecha">Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-title">Criticidad</div>
+    <div class="legend-row alta"><span class="dot"></span><div><b>Alta:</b> riesgo inmediato para la operación, la seguridad o los equipos.</div></div>
+    <div class="legend-row media"><span class="dot"></span><div><b>Media:</b> puede afectar el funcionamiento si no se corrige, sin riesgo inmediato.</div></div>
+    <div class="legend-row baja"><span class="dot"></span><div><b>Baja:</b> observación menor, sin riesgo inmediato, para seguimiento.</div></div>
+  </div>
+
+  <div id="formContainer"></div>
+
+  <section class="summary-panel">
+    <h2>Resumen de hallazgos</h2>
+    <div class="summary-grid">
+      <div class="summary-stat"><div class="n" id="cntOk" style="color:var(--ok)">0</div><div class="l">Cumple</div></div>
+      <div class="summary-stat"><div class="n" id="cntBad" style="color:var(--bad)">0</div><div class="l">No cumple</div></div>
+      <div class="summary-stat"><div class="n" id="cntPending" style="color:var(--muted)">10</div><div class="l">Pendientes</div></div>
+      <div class="summary-score none" id="summaryScore">
+        --% <span class="pct-label">Sin evaluar aún</span>
+      </div>
+    </div>
+    <div class="crit-summary" id="critSummary">
+      <div class="crit-chip alta">
+        <div class="chip-top"><span class="chip-name">Alta</span><span class="chip-n" id="critAltaN">0</span></div>
+        <div class="chip-pct" id="critAltaPct">0% del total</div>
+      </div>
+      <div class="crit-chip media">
+        <div class="chip-top"><span class="chip-name">Media</span><span class="chip-n" id="critMediaN">0</span></div>
+        <div class="chip-pct" id="critMediaPct">0% del total</div>
+      </div>
+      <div class="crit-chip baja">
+        <div class="chip-top"><span class="chip-name">Baja</span><span class="chip-n" id="critBajaN">0</span></div>
+        <div class="chip-pct" id="critBajaPct">0% del total</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="summary-panel" id="finalObsPanel">
+    <h2>Observaciones finales</h2>
+    <div class="field">
+      <label for="obsFinal">Comentarios generales de la auditoría</label>
+      <textarea id="obsFinal" class="field-textarea" rows="4" placeholder="Escriba aquí cualquier observación general adicional sobre la auditoría..."></textarea>
+      <div class="print-only-value" id="obsFinalPrint"></div>
+    </div>
+  </section>
+
+  <section class="signature-panel">
+    <h2>Firma de responsabilidad</h2>
+    <div class="sig-grid">
+      <div class="sig-pad-wrap">
+        <canvas id="sigCanvas"></canvas>
+        <div class="sig-controls no-print">
+          <button class="btn ghost" id="clearSig" type="button">Limpiar firma</button>
+        </div>
+        <div class="sig-line">Firma del auditor(a)</div>
+      </div>
+      <div class="sig-info">
+        <div class="field">
+          <label for="auditorNombreBottom">Nombre de quien audita</label>
+          <input type="text" id="auditorNombreBottom" placeholder="Se sincroniza con el campo superior">
+        </div>
+        <div class="field">
+          <label for="fechaFirma">Fecha de la auditoría</label>
+          <input type="text" id="fechaFirma" readonly>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="action-bar no-print">
+    <button class="btn ghost" id="resetBtn" type="button">Reiniciar formulario</button>
+    <button class="btn secondary" id="saveNotice" type="button" disabled style="cursor:default;">Guardado automático activo</button>
+    <button class="btn" id="exportPdfBtn" type="button">Exportar a PDF</button>
+  </div>
+
+</div>
+
+<script>
+const AUDIT_DATA = [
+  {cat:"Ítems de auditoría", items:[
+    {n:1, name:"Estado físico de la bandeja", text:"sin corrosión, perforaciones, deformaciones ni daños visibles."},
+    {n:2, name:"Contención del agua", text:"la bandeja recoge el agua de condensación sin desbordamientos."},
+    {n:3, name:"Limpieza de la bandeja", text:"sin agua estancada, suciedad ni acumulación de residuos."},
+    {n:4, name:"Drenaje", text:"pendiente adecuada y bajante sin obstrucciones, fugas ni daños."},
+    {n:5, name:"Soportería y fijación", text:"soportes, varillas y elementos de fijación en buen estado."},
+    {n:6, name:"Condensación en soportes", text:"los soportes de tubería no generan goteos hacia la bandeja."},
+    {n:7, name:"Aislamiento de tuberías", text:"aislamiento íntegro, bien sellado y sin humedad, desprendimientos ni deterioro."},
+    {n:8, name:"Condensación y filtraciones", text:"sin condensación excesiva ni filtraciones provenientes de tuberías."},
+    {n:9, name:"Estado del cielo raso", text:"placas sin manchas de humedad, moho, deformaciones ni desprendimientos."},
+    {n:10, name:"Acceso y estructura", text:"acceso adecuado para limpieza/mantenimiento y estructura de suspensión en buen estado."}
+  ]}
+];
+const TOTAL_ITEMS = AUDIT_DATA.reduce((a,c)=>a+c.items.length,0);
+
+const CRIT_OPTIONS = [
+  {v:"", label:"Sin definir"},
+  {v:"alta", label:"Alta — riesgo inmediato para la operación, seguridad o equipos"},
+  {v:"media", label:"Media — puede afectar el funcionamiento si no se corrige"},
+  {v:"baja", label:"Baja — observación menor, para seguimiento"}
+];
+
+const BRANCHES = [
+  "Albrook","Alta Plaza","Bella Vista","Brisas del Golf","Chitré","Coronado",
+  "Costa del Este","La Pita","La Siesta","Market Plaza","Multiplaza",
+  "Panamá Pacífico","Transístmica","Versalles","Villa Zaita"
+];
+
+const STORAGE_KEY = "auditoria_bandejas_v2";
+let STATE = {};
+
+function populateSucursales(){
+  const sel = document.getElementById('sucursal');
+  BRANCHES.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+}
+
+function buildForm(){
+  const container = document.getElementById('formContainer');
+  container.innerHTML = '';
+  AUDIT_DATA.forEach((cat, idx) => {
+    const section = document.createElement('section');
+    section.className = 'category-section';
+
+    const head = document.createElement('div');
+    head.className = 'category-head';
+    head.innerHTML = `<span class="tag">C${idx+1}</span><h2>${cat.cat}</h2>`;
+    section.appendChild(head);
+
+    cat.items.forEach(item => {
+      section.appendChild(buildItemCard(item));
+    });
+
+    container.appendChild(section);
+  });
+}
+
+function buildItemCard(item){
+  const n = item.n;
+  const card = document.createElement('article');
+  card.className = 'item-card';
+  card.id = `card_${n}`;
+
+  const critOptionsHtml = CRIT_OPTIONS.map(o => `<option value="${o.v}">${o.label}</option>`).join('');
+
+  card.innerHTML = `
+    <div class="item-head">
+      <span class="item-num">${n}</span>
+      <span class="item-text"><strong>${item.name}:</strong> ${item.text}</span>
+    </div>
+    <div class="estado-row">
+      <span class="opt">
+        <input type="radio" name="estado_${n}" id="estado_${n}_ok" value="cumple">
+        <label for="estado_${n}_ok" class="lbl-ok">Cumple</label>
+      </span>
+      <span class="opt">
+        <input type="radio" name="estado_${n}" id="estado_${n}_bad" value="no_cumple">
+        <label for="estado_${n}_bad" class="lbl-bad">No cumple</label>
+      </span>
+    </div>
+    <div class="field-row" style="grid-template-columns:1fr;">
+      <div class="field">
+        <label for="crit_${n}">Criticidad</label>
+        <select id="crit_${n}" class="field-select">${critOptionsHtml}</select>
+        <div class="print-only-value" id="critPrint_${n}"></div>
+      </div>
+    </div>
+    <div class="field-row solicitud-field" style="grid-template-columns:1fr;">
+      <div class="field">
+        <label for="sol_${n}">N.º de Solicitud <span class="opt-mark">(si no cumple)</span></label>
+        <input type="text" id="sol_${n}" class="field-input" placeholder="N.º de solicitud generada...">
+        <div class="print-only-value" id="solPrint_${n}"></div>
+      </div>
+    </div>
+    <div class="field-row" style="grid-template-columns:1fr;">
+      <div class="field">
+        <label for="rec_${n}">Recomendación / Observaciones</label>
+        <textarea id="rec_${n}" class="field-textarea" rows="2" placeholder="Recomendación u observación..."></textarea>
+        <div class="print-only-value" id="recPrint_${n}"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Fotografías (galería o cámara)</label>
+      <div class="photo-row">
+        ${photoSlotHtml(n,1)}
+        ${photoSlotHtml(n,2)}
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function photoSlotHtml(n, slot){
+  return `
+    <div class="photo-slot empty" id="photoSlot_${n}_${slot}">
+      <div class="capture-btns no-print">
+        <label for="photoCam_${n}_${slot}"><span class="icon">📷</span>Cámara
+          <input type="file" accept="image/*" capture="environment" id="photoCam_${n}_${slot}">
+        </label>
+        <label for="photoGal_${n}_${slot}"><span class="icon">🖼</span>Galería
+          <input type="file" accept="image/*" id="photoGal_${n}_${slot}">
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+/* Photo handling */
+function wirePhotoInputs(n, slot){
+  ['photoCam_','photoGal_'].forEach(prefix => {
+    const input = document.getElementById(`${prefix}${n}_${slot}`);
+    if(!input) return;
+    input.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => { setPhoto(n, slot, ev.target.result); saveState(); };
+      reader.readAsDataURL(file);
+    });
+  });
+}
+
+function initPhotoHandlers(){
+  AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
+    [1,2].forEach(slot => wirePhotoInputs(item.n, slot));
+  }));
+}
+
+function setPhoto(n, slot, dataUrl){
+  const wrap = document.getElementById(`photoSlot_${n}_${slot}`);
+  wrap.classList.remove('empty');
+  wrap.innerHTML = `
+    <img src="${dataUrl}" alt="Foto ${slot} del ítem ${n}">
+    <button type="button" class="remove-btn no-print" aria-label="Quitar foto">✕</button>
+  `;
+  wrap.querySelector('.remove-btn').addEventListener('click', () => clearPhoto(n, slot));
+  STATE[`foto_${n}_${slot}`] = dataUrl;
+}
+
+function clearPhoto(n, slot){
+  delete STATE[`foto_${n}_${slot}`];
+  const wrap = document.getElementById(`photoSlot_${n}_${slot}`);
+  wrap.classList.add('empty');
+  wrap.innerHTML = `
+    <div class="capture-btns no-print">
+      <label for="photoCam_${n}_${slot}"><span class="icon">📷</span>Cámara
+        <input type="file" accept="image/*" capture="environment" id="photoCam_${n}_${slot}">
+      </label>
+      <label for="photoGal_${n}_${slot}"><span class="icon">🖼</span>Galería
+        <input type="file" accept="image/*" id="photoGal_${n}_${slot}">
+      </label>
+    </div>
+  `;
+  wirePhotoInputs(n, slot);
+  saveState();
+}
+
+/* Summary / scoring */
+function updateSummary(){
+  let ok=0, bad=0;
+  let critCounts = {alta:0, media:0, baja:0};
+
+  AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
+    const n = item.n;
+    const checked = document.querySelector(`input[name="estado_${n}"]:checked`);
+    const card = document.getElementById(`card_${n}`);
+    card.classList.remove('answered-ok','answered-bad');
+    if(checked){
+      if(checked.value === 'cumple'){
+        ok++; card.classList.add('answered-ok');
+      } else {
+        bad++; card.classList.add('answered-bad');
+        const critVal = document.getElementById(`crit_${n}`).value;
+        if(critVal && critCounts[critVal] !== undefined) critCounts[critVal]++;
+      }
+    }
+    applyRequiredState(n, checked ? checked.value : '');
+    tintCritSelect(n);
+  }));
+
+  const answered = ok+bad;
+  const pending = TOTAL_ITEMS - answered;
+  document.getElementById('cntOk').textContent = ok;
+  document.getElementById('cntBad').textContent = bad;
+  document.getElementById('cntPending').textContent = pending;
+
+  ['alta','media','baja'].forEach(k => {
+    const n = critCounts[k];
+    const pct = Math.round((n/TOTAL_ITEMS)*100);
+    document.getElementById(`crit${k.charAt(0).toUpperCase()+k.slice(1)}N`).textContent = n;
+    document.getElementById(`crit${k.charAt(0).toUpperCase()+k.slice(1)}Pct`).textContent = `${pct}% del total`;
+  });
+
+  const scoreBox = document.getElementById('summaryScore');
+  const stamp = document.getElementById('stampBadge');
+  const stampPct = document.getElementById('stampPct');
+
+  if(answered === 0){
+    scoreBox.className = 'summary-score none';
+    scoreBox.innerHTML = `--% <span class="pct-label">Sin evaluar aún</span>`;
+    stamp.className = 'stamp-badge none';
+    stampPct.textContent = '--%';
+    return;
+  }
+  const pct = Math.round((ok/answered)*100);
+  let cls, label;
+  if(pct >= 90){ cls='ok'; label='Cumplimiento satisfactorio'; }
+  else if(pct >= 75){ cls='warn'; label='Cumplimiento aceptable — requiere seguimiento'; }
+  else { cls='bad'; label='Cumplimiento crítico — atención inmediata'; }
+
+  scoreBox.className = `summary-score ${cls}`;
+  scoreBox.innerHTML = `${pct}% <span class="pct-label">${label}</span>`;
+  stamp.className = `stamp-badge ${cls}`;
+  stampPct.textContent = `${pct}%`;
+}
+
+function tintCritSelect(n){
+  const sel = document.getElementById(`crit_${n}`);
+  sel.classList.remove('crit-alta','crit-media','crit-baja');
+  if(sel.value) sel.classList.add(`crit-${sel.value}`);
+}
+
+function applyRequiredState(n, estadoValue){
+  const rec = document.getElementById(`rec_${n}`);
+  const crit = document.getElementById(`crit_${n}`);
+  const sol = document.getElementById(`sol_${n}`);
+  const recLabel = document.querySelector(`label[for="rec_${n}"]`);
+  const critLabel = document.querySelector(`label[for="crit_${n}"]`);
+  const solLabel = document.querySelector(`label[for="sol_${n}"]`);
+  if(estadoValue === 'no_cumple'){
+    rec.required = true; crit.required = true; sol.required = true;
+    if(recLabel) recLabel.innerHTML = 'Recomendación / Observaciones <span class="required-mark">*</span>';
+    if(critLabel) critLabel.innerHTML = 'Criticidad <span class="required-mark">*</span>';
+    if(solLabel) solLabel.innerHTML = 'N.º de Solicitud <span class="required-mark">*</span>';
+  } else {
+    rec.required = false; crit.required = false; sol.required = false;
+    rec.classList.remove('field-required'); crit.classList.remove('field-required'); sol.classList.remove('field-required');
+    if(recLabel) recLabel.textContent = 'Recomendación / Observaciones';
+    if(critLabel) critLabel.textContent = 'Criticidad';
+    if(solLabel) solLabel.innerHTML = 'N.º de Solicitud <span class="opt-mark">(si no cumple)</span>';
+  }
+}
+
+/* Signature pad */
+let sigCanvas, sigCtx, drawing=false, sigHasContent=false;
+function initSignaturePad(){
+  sigCanvas = document.getElementById('sigCanvas');
+  function resize(){
+    const ratio = window.devicePixelRatio || 1;
+    const rect = sigCanvas.getBoundingClientRect();
+    const prevData = sigCanvas.toDataURL ? sigCanvas.toDataURL() : null;
+    sigCanvas.width = rect.width * ratio;
+    sigCanvas.height = rect.height * ratio;
+    sigCtx = sigCanvas.getContext('2d');
+    sigCtx.scale(ratio, ratio);
+    sigCtx.lineWidth = 2;
+    sigCtx.lineCap = 'round';
+    sigCtx.strokeStyle = '#1a2332';
+  }
+  resize();
+
+  function getPos(e){
+    const rect = sigCanvas.getBoundingClientRect();
+    const point = (e.touches ? e.touches[0] : e);
+    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+  }
+  function start(e){ drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x,p.y); e.preventDefault(); }
+  function move(e){ if(!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); sigHasContent = true; e.preventDefault(); }
+  function end(){ if(drawing){ drawing = false; saveState(); } }
+
+  sigCanvas.addEventListener('mousedown', start);
+  sigCanvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  sigCanvas.addEventListener('touchstart', start, {passive:false});
+  sigCanvas.addEventListener('touchmove', move, {passive:false});
+  sigCanvas.addEventListener('touchend', end);
+
+  document.getElementById('clearSig').addEventListener('click', () => {
+    sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+    sigHasContent = false;
+    saveState();
+  });
+}
+
+/* Save / restore */
+function collectAndSaveScalarFields(){
+  STATE.sucursal = document.getElementById('sucursal').value;
+  STATE.area = document.getElementById('area').value;
+  STATE.auditorNombre = document.getElementById('auditorNombreTop').value;
+  STATE.fecha = document.getElementById('fecha').value;
+  STATE.obsFinal = document.getElementById('obsFinal').value;
+  AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
+    const checked = document.querySelector(`input[name="estado_${item.n}"]:checked`);
+    STATE[`estado_${item.n}`] = checked ? checked.value : '';
+    STATE[`crit_${item.n}`] = document.getElementById(`crit_${item.n}`).value;
+    STATE[`sol_${item.n}`] = document.getElementById(`sol_${item.n}`).value;
+    STATE[`rec_${item.n}`] = document.getElementById(`rec_${item.n}`).value;
+  }));
+  if(sigCanvas){ STATE.firma = sigHasContent ? sigCanvas.toDataURL() : ''; }
+}
+
+function saveState(){
+  collectAndSaveScalarFields();
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){ }
+}
+
+function restoreState(){
+  let raw;
+  try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){ raw = null; }
+  if(!raw) return;
+  try{ STATE = JSON.parse(raw); }catch(e){ STATE = {}; return; }
+
+  if(STATE.sucursal) document.getElementById('sucursal').value = STATE.sucursal;
+  if(STATE.area) document.getElementById('area').value = STATE.area;
+  if(STATE.auditorNombre){
+    document.getElementById('auditorNombreTop').value = STATE.auditorNombre;
+    document.getElementById('auditorNombreBottom').value = STATE.auditorNombre;
+  }
+  if(STATE.fecha) document.getElementById('fecha').value = STATE.fecha;
+  if(STATE.obsFinal) document.getElementById('obsFinal').value = STATE.obsFinal;
+
+  AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
+    const n = item.n;
+    if(STATE[`estado_${n}`]){
+      const el = document.getElementById(`estado_${n}_${STATE[`estado_${n}`]==='cumple'?'ok':'bad'}`);
+      if(el) el.checked = true;
+    }
+    if(STATE[`crit_${n}`]) document.getElementById(`crit_${n}`).value = STATE[`crit_${n}`];
+    if(STATE[`sol_${n}`]) document.getElementById(`sol_${n}`).value = STATE[`sol_${n}`];
+    if(STATE[`rec_${n}`]) document.getElementById(`rec_${n}`).value = STATE[`rec_${n}`];
+    [1,2].forEach(slot => {
+      const key = `foto_${n}_${slot}`;
+      if(STATE[key]) setPhoto(n, slot, STATE[key]);
+    });
+  }));
+
+  if(STATE.firma && sigCtx){
+    const img = new Image();
+    img.onload = () => {
+      const rect = sigCanvas.getBoundingClientRect();
+      sigCtx.drawImage(img, 0, 0, rect.width, rect.height);
+      sigHasContent = true;
+    };
+    img.src = STATE.firma;
+  }
+}
+
+/* Print-friendly values */
+function preparePrintValues(){
+  AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
+    const n = item.n;
+    const critSel = document.getElementById(`crit_${n}`);
+    const critText = critSel.options[critSel.selectedIndex].text;
+    document.getElementById(`critPrint_${n}`).textContent = critSel.value ? critText : '—';
+    document.getElementById(`solPrint_${n}`).textContent = document.getElementById(`sol_${n}`).value || '—';
+    document.getElementById(`recPrint_${n}`).textContent = document.getElementById(`rec_${n}`).value || '—';
+  }));
+  document.getElementById('obsFinalPrint').textContent = document.getElementById('obsFinal').value || '—';
+}
+
+/* Validation */
+function validateRequiredFields(){
+  let firstInvalid = null;
+  let missing = [];
+  AUDIT_DATA.forEach(cat => cat.items.forEach(item => {
+    const n = item.n;
+    const checked = document.querySelector(`input[name="estado_${n}"]:checked`);
+    if(checked && checked.value === 'no_cumple'){
+      const crit = document.getElementById(`crit_${n}`);
+      const rec = document.getElementById(`rec_${n}`);
+      const sol = document.getElementById(`sol_${n}`);
+      const critEmpty = crit.value.trim() === '';
+      const recEmpty = rec.value.trim() === '';
+      const solEmpty = sol.value.trim() === '';
+      crit.classList.toggle('field-required', critEmpty);
+      rec.classList.toggle('field-required', recEmpty);
+      sol.classList.toggle('field-required', solEmpty);
+      if(critEmpty || recEmpty || solEmpty){
+        missing.push(n);
+        if(!firstInvalid) firstInvalid = critEmpty ? crit : (solEmpty ? sol : rec);
+      }
+    }
+  }));
+  if(firstInvalid){
+    firstInvalid.scrollIntoView({behavior:'smooth', block:'center'});
+    firstInvalid.focus();
+    alert(`Antes de exportar, completa Criticidad, N.º de Solicitud y Recomendación/Observaciones en los ítems marcados "No cumple": ${missing.join(', ')}.`);
+    return false;
+  }
+  return true;
+}
+
+/* Wiring */
+function wireEvents(){
+  document.getElementById('formContainer').addEventListener('change', (e) => {
+    if(e.target.matches('input[type=radio], select, textarea')){
+      updateSummary();
+      saveState();
+    }
+  });
+  document.getElementById('formContainer').addEventListener('input', (e) => {
+    if(e.target.matches('textarea')) saveState();
+  });
+
+  const syncName = (fromId, toId) => {
+    document.getElementById(fromId).addEventListener('input', (e) => {
+      document.getElementById(toId).value = e.target.value;
+      saveState();
+    });
+  };
+  syncName('auditorNombreTop','auditorNombreBottom');
+  syncName('auditorNombreBottom','auditorNombreTop');
+
+  document.getElementById('sucursal').addEventListener('change', saveState);
+  document.getElementById('area').addEventListener('input', saveState);
+  document.getElementById('obsFinal').addEventListener('input', saveState);
+  document.getElementById('fecha').addEventListener('change', () => {
+    document.getElementById('fechaFirma').value = formatDate(document.getElementById('fecha').value);
+    saveState();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('¿Reiniciar el formulario? Se perderán todos los datos, fotos y la firma.')){
+      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+      location.reload();
+    }
+  });
+
+  document.getElementById('exportPdfBtn').addEventListener('click', () => {
+    if(!validateRequiredFields()) return;
+    preparePrintValues();
+    window.print();
+  });
+
+  window.addEventListener('beforeprint', preparePrintValues);
+}
+
+function formatDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function setToday(){
+  const today = new Date();
+  const iso = today.toISOString().slice(0,10);
+  const fechaInput = document.getElementById('fecha');
+  if(!fechaInput.value) fechaInput.value = iso;
+  document.getElementById('fechaFirma').value = formatDate(fechaInput.value);
+}
+
+/* Init */
+document.addEventListener('DOMContentLoaded', () => {
+  populateSucursales();
+  buildForm();
+  initPhotoHandlers();
+  initSignaturePad();
+  setToday();
+  restoreState();
+  updateSummary();
+  wireEvents();
+});
+</script>
+
+</body>
+</html>
